@@ -1,15 +1,17 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
-import { loadRegistry, getStore, searchStores, searchItems, listCities, listCategories } from "./registry.js";
+import { loadRegistry, getStore, searchStores, searchItemsScored, listCities, listCategories } from "./registry.js";
 import { stockLikelihood } from "./likelihood.js";
 import { validateStore } from "./validate.js";
 import { processSubmission } from "./submit.js";
+import { nearby } from "./geo.js";
+import { openNow } from "./hours.js";
 
 const text = (data: unknown) => ({ content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] });
 
 export async function runMcp(): Promise<void> {
-  const server = new McpServer({ name: "shelfsignal", version: "0.1.0" });
+  const server = new McpServer({ name: "shelfsignal", version: "0.2.0" });
 
   server.tool(
     "search_stores",
@@ -20,18 +22,30 @@ export async function runMcp(): Promise<void> {
       category: z.string().optional().describe("Category filter, e.g. tacos, bakery, produce."),
       type: z.string().optional().describe("Store type: restaurant, grocery, bakery, bodega, cafe, pharmacy, butcher, market, retail."),
     },
-    async (args) => text(searchStores(loadRegistry(), args)),
+    async (args) => text(searchStores(loadRegistry(), args).map((s) => ({ ...s, openNow: openNow(s) }))),
+  );
+
+  server.tool(
+    "find_nearby",
+    "Find listed stores near a point (lat/lng), nearest first, each with distance in km and an open-now signal (null when the store has no structured hours: unknown, not a guess).",
+    {
+      lat: z.number().describe("Latitude of the search point."),
+      lng: z.number().describe("Longitude of the search point."),
+      radius_km: z.number().optional().describe("Search radius in kilometers; defaults to 5."),
+    },
+    async ({ lat, lng, radius_km }) =>
+      text(nearby(loadRegistry().stores, lat, lng, radius_km ?? 5).map(({ store, distanceKm }) => ({ storeId: store.id, storeName: store.name, type: store.type, neighborhood: store.neighborhood, address: store.address, distanceKm, openNow: openNow(store), demo: Boolean(store.demo) }))),
   );
 
   server.tool(
     "search_items",
-    "Find a specific food or product across listed stores, e.g. 'birria tacos' or 'oat milk'. Pair with check_stock before telling a human a store has it.",
+    "Find a specific food or product across listed stores, e.g. 'birria tacos' or 'oat milk'. Every hit carries its stock verdict (score, band, reasons), best evidence first. Never present an 'uncertain' or 'unlikely' verdict to a human as available.",
     {
       query: z.string().describe("Item or food to find."),
       city: z.string().optional().describe("Limit to one city."),
     },
     async ({ query, city }) =>
-      text(searchItems(loadRegistry(), query, city).map(({ store, item }) => ({ storeId: store.id, storeName: store.name, neighborhood: store.neighborhood, item }))),
+      text(searchItemsScored(loadRegistry(), query, city).map(({ store, item, verdict }) => ({ storeId: store.id, storeName: store.name, neighborhood: store.neighborhood, openNow: openNow(store), item, verdict }))),
   );
 
   server.tool(
@@ -40,7 +54,7 @@ export async function runMcp(): Promise<void> {
     { store_id: z.string().describe("Registry id, e.g. sf-mission-taqueria-demo.") },
     async ({ store_id }) => {
       const store = getStore(loadRegistry(), store_id);
-      return text(store ?? { error: `No store with id ${store_id}` });
+      return text(store ? { ...store, openNow: openNow(store) } : { error: `No store with id ${store_id}` });
     },
   );
 

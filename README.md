@@ -22,7 +22,10 @@ npm test
 node dist/cli.js coverage
 node dist/cli.js search "birria" --city "San Francisco"
 node dist/cli.js stock sf-mission-taqueria-demo "Birria tacos"
+node dist/cli.js nearby 37.7599 -122.4148 --radius 5
+node dist/cli.js ping sf-sunset-bakery-demo "Cardamom knot" in
 node dist/cli.js validate sf-mission-taqueria-demo
+node dist/cli.js doctor
 node dist/cli.js mcp        # run the MCP server (stdio)
 ```
 
@@ -30,8 +33,9 @@ node dist/cli.js mcp        # run the MCP server (stdio)
 
 | Tool | What it does |
 |---|---|
-| `search_stores` | Find stores by text, city, category, or type |
-| `search_items` | Find a food or product across every listed store |
+| `search_stores` | Find stores by text, city, category, or type (with open-now signal) |
+| `find_nearby` | Stores near a lat/lng point, nearest first, with distance and open-now |
+| `search_items` | Find a food or product across stores, every hit carrying its stock verdict |
 | `get_store` | Full listing: hours, address, fulfillment, items, stock |
 | `check_stock` | Stock-likelihood verdict (score, band, reasons) for one item |
 | `validate_store` | Validation receipt and tier for one listing |

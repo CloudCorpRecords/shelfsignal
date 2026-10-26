@@ -1,1 +1,43 @@
-{"bin":{"shelfsignal":"dist/cli.js"},"dependencies":{"@modelcontextprotocol/sdk":"^1","zod":"^3"},"description":"The open store index for AI agents: local merchants list what they sell for a flat $100 starter, agents find real food and real stock nearby, and every listing carries a validation receipt. No 30% delivery-app cut.","devDependencies":{"@types/node":"^20","tsx":"^4","typescript":"^5"},"engines":{"node":">=20"},"files":["dist","server.json","registry","examples","docs"],"homepage":"https://github.com/CloudCorpRecords/shelfsignal#readme","license":"MIT","mcpName":"io.github.CloudCorpRecords/shelfsignal","name":"@reneturcios/shelfsignal","publishConfig":{"access":"public"},"repository":{"type":"git","url":"git+https://github.com/CloudCorpRecords/shelfsignal.git"},"scripts":{"build":"tsc","dev":"tsx src/cli.ts","test":"tsx --test test/*.test.ts"},"type":"module","version":"0.1.0"}
+{
+  "bin": {
+    "shelfsignal": "dist/cli.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1",
+    "zod": "^3"
+  },
+  "description": "The open store index for AI agents: local merchants list what they sell for a flat $100 starter, agents find real food and real stock nearby, and every listing carries a validation receipt. No 30% delivery-app cut.",
+  "devDependencies": {
+    "@types/node": "^20",
+    "tsx": "^4",
+    "typescript": "^5"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "files": [
+    "dist",
+    "server.json",
+    "registry",
+    "examples",
+    "docs"
+  ],
+  "homepage": "https://github.com/CloudCorpRecords/shelfsignal#readme",
+  "license": "MIT",
+  "mcpName": "io.github.CloudCorpRecords/shelfsignal",
+  "name": "@reneturcios/shelfsignal",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CloudCorpRecords/shelfsignal.git"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/cli.ts",
+    "test": "tsx --test test/*.test.ts"
+  },
+  "type": "module",
+  "version": "0.2.0"
+}

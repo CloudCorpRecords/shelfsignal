@@ -86,3 +86,58 @@ test("CLI stock command parses store id and multi-word item (regression: positio
   assert.equal(verdict.storeId, "sf-mission-taqueria-demo");
   assert.equal(verdict.item, "Birria tacos");
 });
+
+import { haversineKm, nearby } from "../src/geo.js";
+import { isOpenAt, openNow } from "../src/hours.js";
+import { updateStock } from "../src/update.js";
+import { searchItemsScored } from "../src/registry.js";
+import { loadRegistry as loadReg2 } from "../src/registry.js";
+
+test("geo: haversine between Mission and Ferry Building is about 3 km, nearby sorts nearest first", () => {
+  const d = haversineKm(37.7599, -122.4148, 37.7955, -122.3937);
+  assert.ok(d > 3.5 && d < 5.0, `expected roughly 4.3km, got ${d}`);
+  const hits = nearby(loadReg2().stores, 37.7599, -122.4148, 10);
+  assert.equal(hits[0].store.id, "sf-mission-taqueria-demo");
+  assert.equal(hits[0].distanceKm, 0);
+  assert.ok(hits.every((h, i) => i === 0 || h.distanceKm >= hits[i - 1].distanceKm));
+  assert.equal(nearby(loadReg2().stores, 37.7599, -122.4148, 0.5).length, 1);
+});
+
+test("hours: open-now honors structured hours, closed days, and midnight spill; unknown without structured hours", () => {
+  const regH = loadReg2();
+  const bakery = regH.stores.find((s) => s.id === "sf-sunset-bakery-demo")!;
+  assert.equal(isOpenAt(bakery, "tue", 8 * 60), true);
+  assert.equal(isOpenAt(bakery, "tue", 16 * 60), false);
+  assert.equal(isOpenAt(bakery, "mon", 10 * 60), false, "closed Mondays");
+  const noStructured = { ...bakery, hoursStructured: undefined };
+  assert.equal(isOpenAt(noStructured, "tue", 600), null);
+  const lateNight = { ...bakery, hoursStructured: { fri: [["18:00", "02:00"]] as [string, string][] } };
+  assert.equal(isOpenAt(lateNight, "fri", 23 * 60), true);
+  assert.equal(isOpenAt(lateNight, "sat", 1 * 60), true, "Friday range spills past midnight");
+  assert.equal(isOpenAt(lateNight, "sat", 3 * 60), false);
+  // 2026-10-25 is a Sunday; 19:00 UTC is 12:00 PDT, taqueria is open
+  const taqueria = regH.stores.find((s) => s.id === "sf-mission-taqueria-demo")!;
+  assert.equal(openNow(taqueria, new Date("2026-10-25T19:00:00Z")), true);
+  assert.equal(openNow(taqueria, new Date("2026-10-25T09:00:00Z")), false, "02:00 PDT is closed");
+});
+
+test("ping: updateStock flips status, restamps freshness, and the verdict recovers", () => {
+  const regU = loadReg2();
+  const before = searchItemsScored(regU, "cardamom", undefined, NOW)[0];
+  assert.equal(before.verdict.band, "unlikely");
+  const result = updateStock(regU, "sf-sunset-bakery-demo", "Cardamom knot", "in_stock", { now: NOW });
+  assert.equal(result.itemName, "Cardamom knot");
+  assert.equal(result.verdict.band, "likely");
+  assert.equal(result.store.items[1].lastConfirmed, "2026-10-25");
+  assert.throws(() => updateStock(regU, "nope", "x", "in_stock"), /No store/);
+  assert.throws(() => updateStock(regU, "sf-sunset-bakery-demo", "Unicorn meat", "in_stock"), /does not list/);
+});
+
+test("scored search: every hit carries a verdict and hits are sorted by score", () => {
+  const hits = searchItemsScored(loadReg2(), "oat milk", undefined, NOW);
+  assert.equal(hits.length, 1);
+  assert.ok(hits[0].verdict.score >= 75);
+  const all = searchItemsScored(loadReg2(), "a", undefined, NOW);
+  assert.ok(all.length > 3);
+  assert.ok(all.every((h, i) => i === 0 || h.verdict.score <= all[i - 1].verdict.score));
+});

@@ -2,6 +2,7 @@ import { readFileSync, existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Registry, Store } from "./types.js";
+import { stockLikelihood } from "./likelihood.js";
 
 /** Registry source of truth: registry/stores.json in the repo (v0.1, git-backed). */
 export function registryPath(): string {
@@ -70,4 +71,15 @@ export function listCities(reg: Registry): string[] {
 
 export function listCategories(reg: Registry): string[] {
   return [...new Set(reg.stores.flatMap((s) => s.categories))].sort();
+}
+
+export interface ScoredItemHit extends ItemHit {
+  verdict: import("./types.js").StockVerdict;
+}
+
+/** Item search with a stock verdict on every hit, best evidence first. This is the shape agents actually consume. */
+export function searchItemsScored(reg: Registry, query: string, city?: string, now = new Date()): ScoredItemHit[] {
+  return searchItems(reg, query, city)
+    .map((hit) => ({ ...hit, verdict: stockLikelihood(hit.store, hit.item, now) }))
+    .sort((a, b) => b.verdict.score - a.verdict.score);
 }

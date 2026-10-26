@@ -14,6 +14,11 @@ export interface StoreItem {
   notes?: string;
 }
 
+export type DayKey = "sun" | "mon" | "tue" | "wed" | "thu" | "fri" | "sat";
+
+/** Structured hours: per day, a list of [open, close] "HH:MM" 24h ranges. A range may cross midnight (close < open). */
+export type StructuredHours = Partial<Record<DayKey, [string, string][]>>;
+
 export interface Store {
   id: string;
   name: string;
@@ -22,10 +27,14 @@ export interface Store {
   city: string;
   neighborhood?: string;
   address: string;
+  lat?: number;
+  lng?: number;
   phone?: string;
   website?: string;
   /** free text, e.g. "Mon-Sun 8am-9pm" */
   hours: string;
+  /** optional machine-readable hours; powers the open-now signal */
+  hoursStructured?: StructuredHours;
   categories: string[];
   fulfillment: Fulfillment[];
   items: StoreItem[];

@@ -46,9 +46,12 @@ export function processSubmission(input: unknown, now = new Date()): SubmissionR
     city: String(raw.city).trim(),
     neighborhood: raw.neighborhood,
     address: String(raw.address).trim(),
+    lat: typeof raw.lat === "number" ? raw.lat : undefined,
+    lng: typeof raw.lng === "number" ? raw.lng : undefined,
     phone: raw.phone,
     website: raw.website,
     hours: String(raw.hours).trim(),
+    hoursStructured: raw.hoursStructured,
     categories: Array.isArray(raw.categories) && raw.categories.length ? raw.categories.map(String) : [String(raw.type)],
     fulfillment: Array.isArray(raw.fulfillment) && raw.fulfillment.length ? raw.fulfillment : ["walk_in"],
     items: (raw.items ?? []).map((i) => ({
