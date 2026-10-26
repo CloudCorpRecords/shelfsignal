@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 import { readFileSync, writeFileSync } from "node:fs";
-import { loadRegistry, registryPath, getStore, searchStores, searchItemsScored, listCities, listCategories } from "./registry.js";
+import { loadRegistry, registryPath, getStore, findItem, searchStores, searchItemsScored, listCities, listCategories } from "./registry.js";
 import { stockLikelihood } from "./likelihood.js";
 import { validateStore } from "./validate.js";
 import { processSubmission } from "./submit.js";
 import { nearby } from "./geo.js";
 import { openNow } from "./hours.js";
 import { updateStock } from "./update.js";
+import { INTAKE_TEMPLATE, parseIntakeEmail } from "./intake.js";
 import type { StockStatus } from "./types.js";
 
 const [cmd, ...args] = process.argv.slice(2);
@@ -38,9 +39,32 @@ Usage:
   shelfsignal doctor                                  Registry health: tiers, freshness, coverage
   shelfsignal validate-all                            Receipts for every listing
   shelfsignal submit <submission.json> [--write]      Check a merchant intake; --write adds it to the registry
+  shelfsignal template                                Print the email submission template for merchants
+  shelfsignal intake <email.txt> [--write]            Parse a filled email template; --write adds it
   shelfsignal coverage                                Cities, categories, store count
   shelfsignal mcp                                     Run the MCP server (stdio)
 `);
+}
+
+/** Print a submission result; with --write, append the store if it validates and the id is new. */
+function handleSubmission(result: ReturnType<typeof processSubmission>, write: boolean): void {
+  out(result);
+  if (result.ok && write) appendStore(result);
+  if (!result.ok) process.exitCode = 1;
+}
+
+function appendStore(result: ReturnType<typeof processSubmission>): void {
+  if (!result.store) return;
+  const path = registryPath();
+  const reg = loadRegistry(path);
+  if (reg.stores.some((s) => s.id === result.store!.id)) {
+    console.error(`Store id ${result.store.id} already exists in the registry; not overwritten.`);
+    process.exitCode = 1;
+    return;
+  }
+  reg.stores.push(result.store);
+  writeFileSync(path, JSON.stringify(reg, null, 2) + "\n");
+  console.error(`Wrote ${result.store.id} to ${path}`);
 }
 
 async function main(): Promise<void> {
@@ -114,8 +138,7 @@ async function main(): Promise<void> {
       const store = getStore(reg, positional[0] ?? "");
       if (!store) return out({ error: `No store with id ${positional[0]}` });
       const name = positional.slice(1).join(" ");
-      const item = store.items.find((i) => i.name.toLowerCase() === name.toLowerCase())
-        ?? store.items.find((i) => i.name.toLowerCase().includes(name.toLowerCase()));
+      const item = findItem(store, name);
       out(item ? stockLikelihood(store, item) : { error: `${store.name} does not list '${name}'`, listedItems: store.items.map((i) => i.name) });
       return;
     }
@@ -131,20 +154,21 @@ async function main(): Promise<void> {
     case "submit": {
       const file = positional[0];
       if (!file) return usage();
-      const result = processSubmission(JSON.parse(readFileSync(file, "utf8")));
-      out(result);
-      if (result.ok && args.includes("--write") && result.store) {
-        const path = registryPath();
-        const reg = loadRegistry(path);
-        if (reg.stores.some((s) => s.id === result.store!.id)) {
-          console.error(`Store id ${result.store.id} already exists in the registry; not overwritten.`);
-          process.exitCode = 1;
-          return;
-        }
-        reg.stores.push(result.store);
-        writeFileSync(path, JSON.stringify(reg, null, 2) + "\n");
-        console.error(`Wrote ${result.store.id} to ${path}`);
-      }
+      handleSubmission(processSubmission(JSON.parse(readFileSync(file, "utf8"))), args.includes("--write"));
+      return;
+    }
+    case "template": {
+      console.log(INTAKE_TEMPLATE);
+      return;
+    }
+    case "intake": {
+      const file = positional[0];
+      if (!file) return usage();
+      const parsed = parseIntakeEmail(readFileSync(file, "utf8"));
+      const result = processSubmission(parsed.raw);
+      out({ parseProblems: parsed.problems, unparsedLines: parsed.unparsed, ...result });
+      if (parsed.problems.length > 0) process.exitCode = 1;
+      if (result.ok && args.includes("--write")) appendStore(result);
       if (!result.ok) process.exitCode = 1;
       return;
     }

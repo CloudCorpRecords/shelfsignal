@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
-import { loadRegistry, getStore, searchStores, searchItemsScored, listCities, listCategories } from "./registry.js";
+import { loadRegistry, getStore, findItem, searchStores, searchItemsScored, listCities, listCategories } from "./registry.js";
 import { stockLikelihood } from "./likelihood.js";
 import { validateStore } from "./validate.js";
 import { processSubmission } from "./submit.js";
@@ -11,7 +11,7 @@ import { openNow } from "./hours.js";
 const text = (data: unknown) => ({ content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] });
 
 export async function runMcp(): Promise<void> {
-  const server = new McpServer({ name: "shelfsignal", version: "0.2.0" });
+  const server = new McpServer({ name: "shelfsignal", version: "0.3.0" });
 
   server.tool(
     "search_stores",
@@ -69,8 +69,7 @@ export async function runMcp(): Promise<void> {
       const reg = loadRegistry();
       const store = getStore(reg, store_id);
       if (!store) return text({ error: `No store with id ${store_id}` });
-      const found = store.items.find((i) => i.name.toLowerCase() === item.toLowerCase())
-        ?? store.items.find((i) => i.name.toLowerCase().includes(item.toLowerCase()));
+      const found = findItem(store, item);
       if (!found) return text({ error: `${store.name} does not list '${item}'`, listedItems: store.items.map((i) => i.name) });
       return text(stockLikelihood(store, found));
     },

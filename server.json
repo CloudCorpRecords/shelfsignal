@@ -1,1 +1,49 @@
-{"$schema":"https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json","description":"The open store index for AI agents: merchants list real stock, agents find local food and stores.","name":"io.github.CloudCorpRecords/shelfsignal","packages":[{"environmentVariables":[],"identifier":"@reneturcios/shelfsignal","packageArguments":[{"type":"positional","value":"mcp"}],"registryBaseUrl":"https://registry.npmjs.org","registryType":"npm","runtimeHint":"npx","transport":{"type":"stdio"},"version":"0.2.0"},{"environmentVariables":[],"identifier":"ghcr.io/cloudcorprecords/shelfsignal:0.2.0","registryType":"oci","runtimeArguments":[{"name":"--rm","type":"named"},{"name":"-i","type":"named"}],"runtimeHint":"docker","transport":{"type":"stdio"}}],"repository":{"source":"github","url":"https://github.com/CloudCorpRecords/shelfsignal"},"title":"ShelfSignal","version":"0.2.0"}
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "description": "The open store index for AI agents: merchants list real stock, agents find local food and stores.",
+  "name": "io.github.CloudCorpRecords/shelfsignal",
+  "packages": [
+    {
+      "environmentVariables": [],
+      "identifier": "@reneturcios/shelfsignal",
+      "packageArguments": [
+        {
+          "type": "positional",
+          "value": "mcp"
+        }
+      ],
+      "registryBaseUrl": "https://registry.npmjs.org",
+      "registryType": "npm",
+      "runtimeHint": "npx",
+      "transport": {
+        "type": "stdio"
+      },
+      "version": "0.3.0"
+    },
+    {
+      "environmentVariables": [],
+      "identifier": "ghcr.io/cloudcorprecords/shelfsignal:0.3.0",
+      "registryType": "oci",
+      "runtimeArguments": [
+        {
+          "name": "--rm",
+          "type": "named"
+        },
+        {
+          "name": "-i",
+          "type": "named"
+        }
+      ],
+      "runtimeHint": "docker",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ],
+  "repository": {
+    "source": "github",
+    "url": "https://github.com/CloudCorpRecords/shelfsignal"
+  },
+  "title": "ShelfSignal",
+  "version": "0.3.0"
+}

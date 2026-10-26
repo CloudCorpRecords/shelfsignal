@@ -29,6 +29,14 @@ export function getStore(reg: Registry, id: string): Store | undefined {
   return reg.stores.find((s) => s.id === id);
 }
 
+/** Find an item in a store by name (exact, then substring). A blank query never matches: an empty string is a substring of everything. */
+export function findItem(store: Store, query: string): Store["items"][number] | undefined {
+  const q = query.trim().toLowerCase();
+  if (!q) return undefined;
+  return store.items.find((i) => i.name.toLowerCase() === q)
+    ?? store.items.find((i) => i.name.toLowerCase().includes(q));
+}
+
 const norm = (s: string) => s.toLowerCase().trim();
 
 export function searchStores(

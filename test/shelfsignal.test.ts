@@ -141,3 +141,56 @@ test("scored search: every hit carries a verdict and hits are sorted by score", 
   assert.ok(all.length > 3);
   assert.ok(all.every((h, i) => i === 0 || h.verdict.score <= all[i - 1].verdict.score));
 });
+
+import { parseIntakeEmail } from "../src/intake.js";
+import { processSubmission } from "../src/submit.js";
+import { findItem } from "../src/registry.js";
+
+const FILLED = `Subject: [ShelfSignal] Pancho's Taqueria
+
+> STORE NAME: Pancho's Taqueria
+TYPE: restaurant
+CITY: San Francisco
+NEIGHBORHOOD: Excelsior
+ADDRESS: 4801 Mission St, San Francisco, CA
+PHONE: (415) 555-0142
+HOURS: Mon-Sun 10am-10pm
+CATEGORIES: tacos, burritos
+FULFILLMENT: walk_in, pickup
+
+ITEMS:
+Birria tacos | tacos | $14.50 | in | yes
+Horchata | drinks | 4.25 | low |
+Old special | tacos | not-a-price | in |
+Mystery item | tacos | 9.00 | maybe |
+`;
+
+test("intake: a filled email template parses into a valid starter submission", () => {
+  const parsed = parseIntakeEmail(FILLED);
+  assert.equal(parsed.raw.name, "Pancho's Taqueria");
+  assert.deepEqual(parsed.raw.categories, ["tacos", "burritos"]);
+  // the two bad item lines are reported by name, not silently dropped or crashed on
+  assert.equal(parsed.problems.length, 2);
+  assert.ok(parsed.problems.some((p) => p.includes("Old special")));
+  assert.ok(parsed.problems.some((p) => p.includes("Mystery item")));
+  const result = processSubmission({ ...parsed.raw, items: (parsed.raw.items ?? []).filter((i) => i.name !== "Old special" && i.name !== "Mystery item") });
+  assert.equal(result.ok, true);
+  assert.equal(result.store?.tier, "starter");
+  assert.equal(result.store?.items[0].price, 14.5, "the $ sign is tolerated");
+  assert.equal(result.store?.items[0].stock, "in_stock");
+  assert.equal(result.store?.items[1].stock, "low");
+});
+
+test("intake: a blank template fails validation with named problems, never a phantom store", () => {
+  const parsed = parseIntakeEmail("STORE NAME:\nCITY:\nITEMS:\n");
+  const result = processSubmission(parsed.raw);
+  assert.equal(result.ok, false);
+  assert.ok(result.problems.length >= 5);
+});
+
+test("findItem regression: a blank item query matches nothing, in any store", () => {
+  const store = loadReg2().stores[0];
+  assert.equal(findItem(store, ""), undefined);
+  assert.equal(findItem(store, "   "), undefined);
+  assert.equal(findItem(store, "birria")?.name, "Birria tacos");
+});

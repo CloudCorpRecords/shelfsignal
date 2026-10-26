@@ -1,5 +1,6 @@
 import type { Registry, StockStatus, Store, StockVerdict } from "./types.js";
 import { stockLikelihood } from "./likelihood.js";
+import { findItem } from "./registry.js";
 
 export interface UpdateResult {
   store: Store;
@@ -24,12 +25,14 @@ export function updateStock(
   const now = opts.now ?? new Date();
   const store = reg.stores.find((s) => s.id === storeId);
   if (!store) throw new Error(`No store with id ${storeId}`);
-  const item = store.items.find((i) => i.name.toLowerCase() === itemName.toLowerCase())
-    ?? store.items.find((i) => i.name.toLowerCase().includes(itemName.toLowerCase()));
+  const item = findItem(store, itemName);
   if (!item) throw new Error(`${store.name} does not list '${itemName}'`);
   item.stock = status;
   item.lastConfirmed = now.toISOString().slice(0, 10);
-  if (typeof opts.price === "number") item.price = opts.price;
+  if (typeof opts.price === "number") {
+    if (!Number.isFinite(opts.price) || opts.price < 0) throw new Error(`Price must be a non-negative number, got ${opts.price}`);
+    item.price = opts.price;
+  }
   store.updatedAt = item.lastConfirmed;
   return { store, itemName: item.name, verdict: stockLikelihood(store, item, now) };
 }

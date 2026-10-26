@@ -10,7 +10,7 @@ DoorDash and the delivery apps built a closed index: they own the customer, scra
 - **Built for agents, not ads.** One MCP server any agent can query: find stores, find items, check stock, validate the listing. No sponsored placement, ever.
 - **Stock is a scored signal, not a claim.** Every item carries a last-confirmed date. The likelihood engine turns that evidence into a 0-100 score with printed reasons, so agents stop bluffing "they have it" and start saying "confirmed today, likely in stock."
 - **Validation receipts.** Every listing carries checks an agent can verify: complete profile, real prices, fresh inventory, declared fulfillment. Tier: VERIFIED, LISTED, STALE, or INCOMPLETE.
-- **Flat money.** $100 Starter Store, one time, listed and validated. No per-order commission. See [docs/PRICING.md](docs/PRICING.md).
+- **Flat money.** $100 Starter Store, one time, listed and validated. No per-order commission. See [docs/PRICING.md](docs/PRICING.md). Merchants can join by email: [docs/EMAIL-INTAKE.md](docs/EMAIL-INTAKE.md).
 
 ## Quick start
 

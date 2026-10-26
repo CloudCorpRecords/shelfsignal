@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.0 - 2026-10-25
+
+Email intake: the submission channel for merchants who live in their inbox.
+
+- **Intake parser** (`src/intake.ts`): a filled plain-text email template becomes the exact submission shape the validator already trusts. Tolerates quoted replies, dollar signs, and plain stock words (in, low, out, sold out). Anything it cannot understand is reported by name; nothing is silently dropped or guessed. The email itself stamps the confirmation date: the merchant attested to this stock today.
+- **CLI**: `shelfsignal template` prints the merchant template; `shelfsignal intake <email.txt> [--write]` parses, validates, and returns the receipt (and appends on --write after approval).
+- **docs/EMAIL-INTAKE.md**: the full system - merchant experience, operator queue states, and the trust rules (nothing auto-publishes, the payment link only follows a human review, no field is ever invented).
+- Adversarial battery fixes: a ping with a non-numeric price could write a null price into the registry (now rejected); a blank item query matched the first item in a store (shared findItem helper, blank matches nothing in CLI, MCP, and ping); verified a corrupt registry already fails cleanly with exit 1.
+- Tests: 12 -> 15 (intake happy path with reported bad lines, blank template, findItem blank-query regression).
+
 ## 0.2.0 - 2026-10-25
 
 Quality pass before any merchant outreach (Rene's direction: make the project really good first).
