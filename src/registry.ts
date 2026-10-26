@@ -29,6 +29,25 @@ export function getStore(reg: Registry, id: string): Store | undefined {
   return reg.stores.find((s) => s.id === id);
 }
 
+/** A listing is public only in the live state. Absent status means live: the registry file has only ever held live listings. */
+export function isLiveStore(store: Store): boolean {
+  return store.status === undefined || store.status === "live";
+}
+
+/** The public view of a registry: live listings only, every non-live queue state excluded. */
+export function liveStores(reg: Registry): Store[] {
+  return reg.stores.filter(isLiveStore);
+}
+
+export function liveRegistry(reg: Registry): Registry {
+  return { version: reg.version, stores: liveStores(reg) };
+}
+
+export function getLiveStore(reg: Registry, id: string): Store | undefined {
+  const store = getStore(reg, id);
+  return store && isLiveStore(store) ? store : undefined;
+}
+
 /** Find an item in a store by name (exact, then substring). A blank query never matches: an empty string is a substring of everything. */
 export function findItem(store: Store, query: string): Store["items"][number] | undefined {
   const q = query.trim().toLowerCase();

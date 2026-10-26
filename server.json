@@ -18,11 +18,11 @@
       "transport": {
         "type": "stdio"
       },
-      "version": "0.3.0"
+      "version": "0.3.1"
     },
     {
       "environmentVariables": [],
-      "identifier": "ghcr.io/cloudcorprecords/shelfsignal:0.3.0",
+      "identifier": "ghcr.io/cloudcorprecords/shelfsignal:0.3.1",
       "registryType": "oci",
       "runtimeArguments": [
         {
@@ -45,5 +45,5 @@
     "url": "https://github.com/CloudCorpRecords/shelfsignal"
   },
   "title": "ShelfSignal",
-  "version": "0.3.0"
+  "version": "0.3.1"
 }

@@ -11,7 +11,7 @@ import { openNow } from "./hours.js";
 const text = (data: unknown) => ({ content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] });
 
 export async function runMcp(): Promise<void> {
-  const server = new McpServer({ name: "shelfsignal", version: "0.3.0" });
+  const server = new McpServer({ name: "shelfsignal", version: "0.3.1" });
 
   server.tool(
     "search_stores",

@@ -27,7 +27,20 @@ node dist/cli.js ping sf-sunset-bakery-demo "Cardamom knot" in
 node dist/cli.js validate sf-mission-taqueria-demo
 node dist/cli.js doctor
 node dist/cli.js mcp        # run the MCP server (stdio)
+node dist/cli.js serve      # run the hosted registry API (http://0.0.0.0:8787)
 ```
+
+## Hosted registry API
+
+A read-only HTTP API over the same registry, for agents and clients that do not speak MCP:
+
+```bash
+curl localhost:8787/v1/stores?city=San%20Francisco
+curl localhost:8787/v1/stores/sf-mission-taqueria-demo
+curl "localhost:8787/v1/search?q=birria"
+```
+
+Only listings in the `live` state are served: listings still in the intake queue are excluded from list and search, and their detail route returns 404. Full reference: [docs/API.md](docs/API.md).
 
 ## MCP tools
 

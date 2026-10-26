@@ -15,7 +15,7 @@ const flag = (name: string) => {
   const i = args.indexOf(`--${name}`);
   return i >= 0 ? args[i + 1] : undefined;
 };
-const VALUE_FLAGS = new Set(["--city", "--category", "--type", "--query", "--price", "--radius"]);
+const VALUE_FLAGS = new Set(["--city", "--category", "--type", "--query", "--price", "--radius", "--port", "--host"]);
 const positional: string[] = [];
 for (let i = 0; i < args.length; i++) {
   const a = args[i];
@@ -42,6 +42,7 @@ Usage:
   shelfsignal template                                Print the email submission template for merchants
   shelfsignal intake <email.txt> [--write]            Parse a filled email template; --write adds it
   shelfsignal coverage                                Cities, categories, store count
+  shelfsignal serve [--port <n>] [--host <host>]      Run the read-only hosted registry API (live listings only)
   shelfsignal mcp                                     Run the MCP server (stdio)
 `);
 }
@@ -62,7 +63,9 @@ function appendStore(result: ReturnType<typeof processSubmission>): void {
     process.exitCode = 1;
     return;
   }
-  reg.stores.push(result.store);
+  // The --write path is the paid step of the operator flow (docs/EMAIL-INTAKE.md):
+  // a store is only appended after approval and payment, so writing marks it live.
+  reg.stores.push({ ...result.store, status: "live" });
   writeFileSync(path, JSON.stringify(reg, null, 2) + "\n");
   console.error(`Wrote ${result.store.id} to ${path}`);
 }
@@ -72,6 +75,15 @@ async function main(): Promise<void> {
     case "mcp": {
       const { runMcp } = await import("./mcp.js");
       await runMcp();
+      return;
+    }
+    case "serve": {
+      const { startApiServer } = await import("./api.js");
+      const port = flag("port") ? Number(flag("port")) : 8787;
+      if (!Number.isInteger(port) || port < 0 || port > 65535) return usage();
+      const host = flag("host") ?? "0.0.0.0";
+      await startApiServer(port, host);
+      console.error(`ShelfSignal registry API listening on http://${host}:${port} (live listings only)`);
       return;
     }
     case "list": {

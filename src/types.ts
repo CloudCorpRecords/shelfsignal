@@ -14,6 +14,15 @@ export interface StoreItem {
   notes?: string;
 }
 
+/**
+ * Intake queue state for a listing, mirroring docs/EMAIL-INTAKE.md:
+ * received -> parsed -> needs-info or ready -> approved -> paid -> live.
+ * Only "live" listings are public. A listing with no status predates this
+ * field: it sits in registry/stores.json, which has only ever held live
+ * listings, so an absent status is treated as live for backward compat.
+ */
+export type ListingStatus = "received" | "parsed" | "needs-info" | "ready" | "approved" | "paid" | "live";
+
 export type DayKey = "sun" | "mon" | "tue" | "wed" | "thu" | "fri" | "sat";
 
 /** Structured hours: per day, a list of [open, close] "HH:MM" 24h ranges. A range may cross midnight (close < open). */
@@ -42,6 +51,8 @@ export interface Store {
   updatedAt: string;
   /** starter = $100 listing tier; growth / pro reserved for later tiers */
   tier: "starter" | "growth" | "pro";
+  /** intake queue state; only "live" is served publicly (absent = live, see ListingStatus) */
+  status?: ListingStatus;
   /** true only for bundled sample data, never for a real merchant */
   demo?: boolean;
 }

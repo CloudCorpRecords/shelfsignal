@@ -15,6 +15,7 @@
       ],
       "hours": "Mon-Sun 10am-10pm",
       "id": "sf-mission-taqueria-demo",
+      "status": "live",
       "items": [
         {
           "category": "tacos",
@@ -109,6 +110,7 @@
       ],
       "hours": "Tue-Sun 7am-3pm",
       "id": "sf-sunset-bakery-demo",
+      "status": "live",
       "items": [
         {
           "category": "bread",
@@ -190,6 +192,7 @@
       ],
       "hours": "Mon-Sun 8am-11pm",
       "id": "sf-richmond-bodega-demo",
+      "status": "live",
       "items": [
         {
           "category": "drinks",
@@ -283,6 +286,7 @@
       ],
       "hours": "Tue, Thu, Sat 8am-2pm",
       "id": "sf-ferry-market-produce-demo",
+      "status": "live",
       "items": [
         {
           "category": "vegetables",

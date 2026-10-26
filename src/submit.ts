@@ -66,6 +66,9 @@ export function processSubmission(input: unknown, now = new Date()): SubmissionR
     })),
     updatedAt: today,
     tier: "starter",
+    // A fresh submission is validated and ready for review, never live:
+    // approval and payment come first, and only the write path marks it live.
+    status: "ready",
     demo: false,
   };
 

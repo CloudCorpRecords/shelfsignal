@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.1 - 2026-10-25
+
+Hosted registry API: the read-only HTTP face of the store index.
+
+- **HTTP API** (`src/api.ts`): Node standard library only, no new dependencies. `GET /health`, `GET /v1/stores` (filters: q, city, category, type), `GET /v1/stores/<id>` (listing plus validation receipt), and `GET /v1/search` (term or category, with scored item hits). Run it with `shelfsignal serve [--port n] [--host h]`; the registry file is re-read per request, so a pushed registry update goes live without a restart. Full reference: docs/API.md.
+- **Live-only rule**: listings now carry a `status` field mirroring the intake queue states. Only `live` listings are served; every other state is excluded from list and search, and returns 404 on the detail route. A missing status counts as live (the registry has only ever held live listings). New submissions are created as `ready`, and only the paid write path marks a listing `live`. The bundled demo stores are now explicitly `live`.
+- Tests: 15 -> 24 (API list, filters, detail with receipt, unknown-id 404, search by term and category, health, write rejection, and non-live exclusion across list, detail, and search).
+
 ## 0.3.0 - 2026-10-25
 
 Email intake: the submission channel for merchants who live in their inbox.
